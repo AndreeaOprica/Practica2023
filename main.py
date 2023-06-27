@@ -140,18 +140,14 @@ def main():
         # df_sorted = df.sort_values(by='score', ascending=False)
         df_sorted = df.sort_values(by='score', key=lambda x: pd.to_numeric(x, errors='coerce'), ascending=False)
 
-        # Generați un număr aleatoriu de maxim două cifre
         random_number = random.randint(0, 99)
-
-        # Numele fișierului CSV și Excel
+        
         csv_filename = f'{destinatie}_{random_number}_hotels_list.csv'
         excel_filename = f'{destinatie}_{random_number}_hotels_list.xlsx'
-
-        # Salvarea în fișierul CSV
+        
         df_sorted.to_csv(csv_filename, index=False)
         print(f"CSV-ul a fost salvat cu succes în fișierul '{csv_filename}'.")
 
-        # Salvarea în fișierul Excel
         df_sorted.to_excel(excel_filename, index=False)
         print(f"Excelul a fost salvat cu succes în fișierul '{excel_filename}'.")
 
