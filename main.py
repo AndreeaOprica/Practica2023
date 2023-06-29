@@ -4,6 +4,10 @@ from dateutil.parser import parse as parse_date
 from playwright.sync_api import sync_playwright
 import pandas as pd
 from urllib.parse import urlencode
+import csv
+from tabulate import tabulate
+from colorama import Fore, Style
+import matplotlib.pyplot as plt
 
 
 def validate_date(date_string):
@@ -35,6 +39,25 @@ def get_valid_input(prompt, validate_func):
             return user_input
         else:
             print("Valoarea introdusă este invalidă. Vă rugăm reintroduceți.")
+
+
+def write_user_data(checkin_date, checkout_date, destinatie, adults, children, rooms, pet_friendly):
+    with open('user_data.csv', mode='a', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow([checkin_date, checkout_date, destinatie, adults, children, rooms, pet_friendly])
+
+
+def display_user_data():
+    with open('user_data.csv', mode='r') as file:
+        reader = csv.reader(file)
+        user_data = list(reader)
+        if user_data:
+            headers = ['Check-in', 'Check-out', 'Destinație', 'Adulți', 'Copii', 'Camere', 'Pet-friendly']
+            colored_user_data = [[Fore.CYAN + str(item) + Style.RESET_ALL for item in row] for row in user_data]
+            table = tabulate(colored_user_data, headers=headers, tablefmt='grid')
+            print(table)
+        else:
+            print("Nu există date de utilizator înregistrate.")
 
 
 def main():
@@ -91,6 +114,8 @@ def main():
             print("Opțiunea pet-friendly poate fi doar 'da' sau 'nu'.")
             continue
 
+    write_user_data(checkin_date, checkout_date, destinatie, adults, children, rooms, pet_friendly)
+
     query_params = {
         "checkin": checkin_date,
         "checkout": checkout_date,
@@ -137,21 +162,32 @@ def main():
             hotels_list.append(hotel_dict)
 
         df = pd.DataFrame(hotels_list)
-        # df_sorted = df.sort_values(by='score', ascending=False)
         df_sorted = df.sort_values(by='score', key=lambda x: pd.to_numeric(x, errors='coerce'), ascending=False)
 
         random_number = random.randint(0, 99)
-        
+
         csv_filename = f'{destinatie}_{random_number}_hotels_list.csv'
         excel_filename = f'{destinatie}_{random_number}_hotels_list.xlsx'
-        
+
         df_sorted.to_csv(csv_filename, index=False)
         print(f"CSV-ul a fost salvat cu succes în fișierul '{csv_filename}'.")
 
         df_sorted.to_excel(excel_filename, index=False)
         print(f"Excelul a fost salvat cu succes în fișierul '{excel_filename}'.")
 
+        # Creare diagramă vizuală
+        plt.figure(figsize=(8, 6))
+        plt.barh(df_sorted['hotel'], pd.to_numeric(df_sorted['score'], errors='coerce'), color='skyblue')
+        plt.xlabel('Scor evaluare')
+        plt.ylabel('Hotel')
+        plt.title('Scorul de evaluare al hotelurilor')
+        plt.tight_layout()
+        plt.show()
+
         browser.close()
+
+    print("Căutarea hotelurilor a fost finalizată.\n")
+    display_user_data()
 
 
 if __name__ == '__main__':
